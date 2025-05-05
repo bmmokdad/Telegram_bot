@@ -6,124 +6,109 @@ from telebot import types
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 bot = telebot.TeleBot(BOT_TOKEN)
 
-users = {}
+# ردود متنوعة للصح والخطأ
+correct_responses = ["صح عليك يا وحش 😎", "مبدع والله 👏", "هيك الشغل ولا بلاش 😌", "أيوه هيك نبيك! 😀"]
+wrong_responses = ["يخرب بيت الذكاء 🌚", "غلط يا معلم 😂", "ضربت جنب 💔", "مو هون الجواب 😅"]
 
-sections = {
-    "أسئلة دينية": [
-        {"q": "كم عدد الصلوات المفروضة في اليوم؟", "a": ["5", "3", "4"], "c": "5"},
-        {"q": "ما هي أول سورة في القرآن؟", "a": ["البقرة", "الفاتحة", "الناس"], "c": "الفاتحة"},
-        {"q": "من هو خاتم الأنبياء؟", "a": ["محمد", "عيسى", "موسى"], "c": "محمد"},
-        # ... زيد حتى 10
-    ],
+# البيانات
+questions = {
     "ألغاز": [
-        {"q": "شي إذا أكلته كله تستفيد، وإذا أكلت نصه تموت؟", "a": ["سمسم", "سم", "سكر"], "c": "سم"},
-        {"q": "ما هو الشيء الذي كلما أخذت منه يكبر؟", "a": ["الحفرة", "العقل", "العمر"], "c": "الحفرة"},
-        {"q": "له رقبة وما إله رأس؟", "a": ["زجاجة", "إنسان", "ثعبان"], "c": "زجاجة"},
-        # ... زيد حتى 10
+        {"q": "شيء يمشي بدون أرجل؟", "a": "الساعة", "choices": ["السيارة", "الساعة", "الهواء"]},
+        {"q": "شيء إذا لمسته صرخ؟", "a": "الجرس", "choices": ["القط", "الجرس", "الهاتف"]},
+        {"q": "شي بيجي بالليل وما يجي بالنهار؟", "a": "الظلام", "choices": ["القمر", "الظلام", "المنبه"]}
     ],
-    "أسئلة عامة": [
-        {"q": "ما هي عاصمة اليابان؟", "a": ["طوكيو", "سول", "بكين"], "c": "طوكيو"},
-        {"q": "من هو مكتشف أمريكا؟", "a": ["كريستوفر كولومبوس", "نيوتن", "أينشتاين"], "c": "كريستوفر كولومبوس"},
-        {"q": "كم عدد قارات العالم؟", "a": ["6", "7", "5"], "c": "7"},
-        # ... زيد حتى 10
+    "دينية": [
+        {"q": "كم عدد أركان الإسلام؟", "a": "5", "choices": ["5", "4", "6"]},
+        {"q": "ما أول سورة بالقرآن؟", "a": "الفاتحة", "choices": ["النساء", "البقرة", "الفاتحة"]},
+        {"q": "ما اسم نبي ابتلعه الحوت؟", "a": "يونس", "choices": ["موسى", "نوح", "يونس"]}
     ],
     "جغرافيا": [
-        {"q": "أين تقع الأهرامات؟", "a": ["مصر", "العراق", "السعودية"], "c": "مصر"},
-        {"q": "ما هو أطول نهر في العالم؟", "a": ["الأمازون", "النيل", "الفرات"], "c": "النيل"},
-        {"q": "أين تقع جبال الأنديز؟", "a": ["أمريكا الجنوبية", "أفريقيا", "آسيا"], "c": "أمريكا الجنوبية"},
-        # ... زيد حتى 10
+        {"q": "عاصمة اليابان؟", "a": "طوكيو", "choices": ["طوكيو", "بكين", "سول"]},
+        {"q": "أطول نهر بالعالم؟", "a": "النيل", "choices": ["الأمازون", "الدانوب", "النيل"]},
+        {"q": "أين تقع جبال الأنديز؟", "a": "أمريكا الجنوبية", "choices": ["آسيا", "أوروبا", "أمريكا الجنوبية"]}
     ],
     "تاريخ": [
-        {"q": "في أي سنة بدأت الحرب العالمية الأولى؟", "a": ["1914", "1939", "1900"], "c": "1914"},
-        {"q": "من أول خليفة للمسلمين؟", "a": ["أبو بكر", "عمر", "عثمان"], "c": "أبو بكر"},
-        {"q": "في أي دولة بدأت الثورة الفرنسية؟", "a": ["فرنسا", "ألمانيا", "إنجلترا"], "c": "فرنسا"},
-        # ... زيد حتى 10
+        {"q": "من حرر القدس؟", "a": "صلاح الدين", "choices": ["صلاح الدين", "هولاكو", "نابليون"]},
+        {"q": "كم سنة استمرت الحرب العالمية الثانية؟", "a": "6", "choices": ["4", "6", "10"]},
+        {"q": "في أي عام سقطت بغداد على يد المغول؟", "a": "1258", "choices": ["1517", "1258", "1917"]}
     ],
     "رياضة": [
-        {"q": "كم لاعب في فريق كرة القدم؟", "a": ["11", "10", "12"], "c": "11"},
-        {"q": "من فاز بكأس العالم 2018؟", "a": ["فرنسا", "الأرجنتين", "البرازيل"], "c": "فرنسا"},
-        {"q": "كم عدد الأشواط في مباراة كرة السلة؟", "a": ["4", "2", "3"], "c": "4"},
-        # ... زيد حتى 10
-    ],
+        {"q": "كم لاعب في فريق كرة القدم؟", "a": "11", "choices": ["9", "11", "10"]},
+        {"q": "من فاز بكأس العالم 2018؟", "a": "فرنسا", "choices": ["فرنسا", "الأرجنتين", "ألمانيا"]},
+        {"q": "عدد أشواط كرة السلة؟", "a": "4", "choices": ["2", "4", "3"]}
+    ]
 }
 
-start_replies = [
-    "هلا بالمثقف، جاهز؟",
-    "يلا نبلّش يا ملك!",
-    "جهّز حالك، جاييك تحدي 🔥"
-]
-
-right_replies = ["صح عليك يا فهيم 😎", "إجابة نارية! 🔥", "ما شاء الله عليك!", "هيك الشغل 😌", "مبدع والله!"]
-wrong_replies = ["غلط يا معلم 🌚", "هاي ما زبطت معك 💔", "جرب غير خيار", "لسا بدك تدريب 😂"]
-
-result_text = {
-    0: "صفر؟! يا حرام جرب تلعب طاولة أحسن 🌚",
-    1: "واحد من عشرة؟ يعني شوي وبتكسر الرقم القياسي بالعك 😂",
-    5: "نص نص، حاول المرة الجاي تركّز",
-    7: "والله قريب من الاحتراف، بس لسا في أمل",
-    10: "عشرة من عشرة! مين بدو ينافسك؟! 👏👏👏"
-}
+user_data = {}
 
 @bot.message_handler(commands=['start'])
-def start_handler(message):
+def start(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    for s in sections.keys():
-        markup.add(types.KeyboardButton(s))
-    bot.send_message(message.chat.id, random.choice(start_replies), reply_markup=markup)
-    users[message.chat.id] = {"section": None, "index": 0, "score": 0, "questions": []}
+    markup.add("أسئلة دينية", "ألغاز", "أسئلة عامة")
+    bot.send_message(message.chat.id, "اختار نوع الأسئلة يلي بدك تجرب حظك فيها:", reply_markup=markup)
+    user_data[message.chat.id] = {"score": 0, "q_index": 0, "category": None}
 
-@bot.message_handler(func=lambda msg: msg.text in sections.keys())
-def section_handler(message):
-    section = message.text
-    users[message.chat.id]["section"] = section
-    users[message.chat.id]["index"] = 0
-    users[message.chat.id]["score"] = 0
-    users[message.chat.id]["questions"] = random.sample(sections[section], 10)
+@bot.message_handler(func=lambda m: m.text in ["أسئلة دينية", "ألغاز", "أسئلة عامة"])
+def choose_category(message):
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    if message.text == "أسئلة عامة":
+        markup.add("جغرافيا", "تاريخ", "رياضة", "رجوع للقائمة")
+        bot.send_message(message.chat.id, "اختار نوع الأسئلة العامة:", reply_markup=markup)
+    else:
+        user_data[message.chat.id] = {"score": 0, "q_index": 0, "category": message.text}
+        send_question(message.chat.id)
+
+@bot.message_handler(func=lambda m: m.text in ["جغرافيا", "تاريخ", "رياضة"])
+def general_sub_category(message):
+    user_data[message.chat.id] = {"score": 0, "q_index": 0, "category": message.text}
     send_question(message.chat.id)
 
 def send_question(chat_id):
-    user = users[chat_id]
-    index = user["index"]
-    if index >= len(user["questions"]):
-        send_result(chat_id)
-        return
-    q = user["questions"][index]
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    for a in q["a"]:
-        markup.add(types.KeyboardButton(a))
-    bot.send_message(chat_id, f"السؤال {index+1}: {q['q']}", reply_markup=markup)
-
-@bot.message_handler(func=lambda msg: True)
-def answer_handler(message):
-    user = users.get(message.chat.id)
-    if not user or not user.get("section"):
-        return
-
-    index = user["index"]
-    if index >= len(user["questions"]):
-        return
-
-    correct_answer = user["questions"][index]["c"]
-    if message.text == correct_answer:
-        user["score"] += 1
-        reply = random.choice(right_replies)
+    data = user_data[chat_id]
+    cat = data["category"]
+    index = data["q_index"]
+    if index < len(questions[cat]):
+        q = questions[cat][index]
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        for choice in q["choices"]:
+            markup.add(choice)
+        bot.send_message(chat_id, f"سؤال {index + 1}: {q['q']}", reply_markup=markup)
     else:
-        reply = random.choice(wrong_replies)
+        score = data["score"]
+        msg = f"نتيجتك: {score} من 3\n"
+        if score == 0:
+            msg += "فشل ذريع 🌚 جرب شي أسهل"
+        elif score == 1:
+            msg += "أهااا، بتحاول يعني 😂"
+        elif score == 2:
+            msg += "قريب من الممتاز 😌"
+        else:
+            msg += "أسطورة زمانك يا غالي 😎"
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        markup.add("رجوع للقائمة")
+        bot.send_message(chat_id, msg, reply_markup=markup)
 
-    bot.send_message(message.chat.id, reply)
-    user["index"] += 1
-    send_question(message.chat.id)
+@bot.message_handler(func=lambda m: m.text == "رجوع للقائمة")
+def back_to_menu(message):
+    start(message)
 
-def send_result(chat_id):
-    user = users[chat_id]
-    score = user["score"]
-    text = f"خلصنا! نتيجتك: {score}/10\n"
-    comment = result_text.get(score, "يعني مش بطّال، بس في مجال تتحسّن 😅")
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    for s in sections.keys():
-        markup.add(types.KeyboardButton(s))
-    bot.send_message(chat_id, text + comment, reply_markup=markup)
-    users[chat_id] = {"section": None, "index": 0, "score": 0, "questions": []}
+@bot.message_handler(func=lambda m: True)
+def answer_question(message):
+    if message.chat.id not in user_data or not user_data[message.chat.id]["category"]:
+        bot.send_message(message.chat.id, "بلّش أول شي من القائمة الرئيسية واختار نوع الأسئلة.")
+        return
+    data = user_data[message.chat.id]
+    cat = data["category"]
+    index = data["q_index"]
+    if index < len(questions[cat]):
+        correct = questions[cat][index]["a"]
+        if message.text == correct:
+            data["score"] += 1
+            bot.send_message(message.chat.id, random.choice(correct_responses))
+        else:
+            bot.send_message(message.chat.id, random.choice(wrong_responses))
+        data["q_index"] += 1
+        send_question(message.chat.id)
 
-print("البوت شغّال... استناه يجلط الناس بالأسئلة")
+print("البوت شغّال... استناه يشتغل")
 bot.polling()
