@@ -6,124 +6,106 @@ from telebot import types
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 bot = telebot.TeleBot(BOT_TOKEN)
 
-users = {}
-
+# الأسئلة لكل قسم
 sections = {
-    "أسئلة دينية": [
-        {"q": "كم عدد الصلوات المفروضة في اليوم؟", "a": ["5", "3", "4"], "c": "5"},
-        {"q": "ما هي أول سورة في القرآن؟", "a": ["البقرة", "الفاتحة", "الناس"], "c": "الفاتحة"},
-        {"q": "من هو خاتم الأنبياء؟", "a": ["محمد", "عيسى", "موسى"], "c": "محمد"},
-        # ... زيد حتى 10
+    "اسئلة دينية": [
+        {"q": "كم عدد الصلوات المفروضة؟", "options": ["3", "5", "7"], "answer": "5"},
+        {"q": "ما اسم أول سورة في القرآن؟", "options": ["البقرة", "الفاتحة", "الناس"], "answer": "الفاتحة"},
+        {"q": "كم ركعة في صلاة الفجر؟", "options": ["2", "3", "4"], "answer": "2"},
+        {"q": "أين نزل الوحي على النبي؟", "options": ["غار حراء", "مكة", "المدينة"], "answer": "غار حراء"},
+        {"q": "ما اسم النبي الذي ابتلعه الحوت؟", "options": ["يونس", "يوسف", "موسى"], "answer": "يونس"},
     ],
     "ألغاز": [
-        {"q": "شي إذا أكلته كله تستفيد، وإذا أكلت نصه تموت؟", "a": ["سمسم", "سم", "سكر"], "c": "سم"},
-        {"q": "ما هو الشيء الذي كلما أخذت منه يكبر؟", "a": ["الحفرة", "العقل", "العمر"], "c": "الحفرة"},
-        {"q": "له رقبة وما إله رأس؟", "a": ["زجاجة", "إنسان", "ثعبان"], "c": "زجاجة"},
-        # ... زيد حتى 10
+        {"q": "شيء إذا أكلته كله تستفيد، وإذا أكلت نصه تموت؟", "options": ["سمسم", "سمك", "سم"], "answer": "سم"},
+        {"q": "فيه بيت ما فيه أبواب ولا نوافذ؟", "options": ["بيت الشعر", "بيت العنكبوت", "بيت الراحة"], "answer": "بيت الشعر"},
+        {"q": "شيء ما يتبلل لو حطيته بالماء؟", "options": ["الحجر", "السمك", "الظل"], "answer": "الظل"},
+        {"q": "أمك وأختك، بس مو بنت أمك؟", "options": ["خالتك", "زوجة أبوك", "أختك"], "answer": "خالتك"},
     ],
-    "أسئلة عامة": [
-        {"q": "ما هي عاصمة اليابان؟", "a": ["طوكيو", "سول", "بكين"], "c": "طوكيو"},
-        {"q": "من هو مكتشف أمريكا؟", "a": ["كريستوفر كولومبوس", "نيوتن", "أينشتاين"], "c": "كريستوفر كولومبوس"},
-        {"q": "كم عدد قارات العالم؟", "a": ["6", "7", "5"], "c": "7"},
-        # ... زيد حتى 10
-    ],
-    "جغرافيا": [
-        {"q": "أين تقع الأهرامات؟", "a": ["مصر", "العراق", "السعودية"], "c": "مصر"},
-        {"q": "ما هو أطول نهر في العالم؟", "a": ["الأمازون", "النيل", "الفرات"], "c": "النيل"},
-        {"q": "أين تقع جبال الأنديز؟", "a": ["أمريكا الجنوبية", "أفريقيا", "آسيا"], "c": "أمريكا الجنوبية"},
-        # ... زيد حتى 10
-    ],
-    "تاريخ": [
-        {"q": "في أي سنة بدأت الحرب العالمية الأولى؟", "a": ["1914", "1939", "1900"], "c": "1914"},
-        {"q": "من أول خليفة للمسلمين؟", "a": ["أبو بكر", "عمر", "عثمان"], "c": "أبو بكر"},
-        {"q": "في أي دولة بدأت الثورة الفرنسية؟", "a": ["فرنسا", "ألمانيا", "إنجلترا"], "c": "فرنسا"},
-        # ... زيد حتى 10
-    ],
-    "رياضة": [
-        {"q": "كم لاعب في فريق كرة القدم؟", "a": ["11", "10", "12"], "c": "11"},
-        {"q": "من فاز بكأس العالم 2018؟", "a": ["فرنسا", "الأرجنتين", "البرازيل"], "c": "فرنسا"},
-        {"q": "كم عدد الأشواط في مباراة كرة السلة؟", "a": ["4", "2", "3"], "c": "4"},
-        # ... زيد حتى 10
-    ],
+    "اسئلة عامة": [
+        {"q": "ما عاصمة اليابان؟", "options": ["بكين", "طوكيو", "سيول"], "answer": "طوكيو"},
+        {"q": "من هو أول رئيس للولايات المتحدة؟", "options": ["لينكولن", "جورج واشنطن", "أوباما"], "answer": "جورج واشنطن"},
+        {"q": "كم عدد قارات العالم؟", "options": ["5", "6", "7"], "answer": "7"},
+        {"q": "من اخترع المصباح الكهربائي؟", "options": ["أديسون", "أينشتاين", "نيوتن"], "answer": "أديسون"},
+    ]
 }
 
-start_replies = [
-    "هلا بالمثقف، جاهز؟",
-    "يلا نبلّش يا ملك!",
-    "جهّز حالك، جاييك تحدي 🔥"
-]
+responses_correct = ["صح عليك يا وحش 😎", "برافو والله انك فاهمها 👏", "هيك الشغل الصح! 😌"]
+responses_wrong = ["غلط يا زلمة 🌚", "ما ضبطت معك هاي 💔", "حاول مرة تانية 😂"]
 
-right_replies = ["صح عليك يا فهيم 😎", "إجابة نارية! 🔥", "ما شاء الله عليك!", "هيك الشغل 😌", "مبدع والله!"]
-wrong_replies = ["غلط يا معلم 🌚", "هاي ما زبطت معك 💔", "جرب غير خيار", "لسا بدك تدريب 😂"]
+user_state = {}
 
-result_text = {
-    0: "صفر؟! يا حرام جرب تلعب طاولة أحسن 🌚",
-    1: "واحد من عشرة؟ يعني شوي وبتكسر الرقم القياسي بالعك 😂",
-    5: "نص نص، حاول المرة الجاي تركّز",
-    7: "والله قريب من الاحتراف، بس لسا في أمل",
-    10: "عشرة من عشرة! مين بدو ينافسك؟! 👏👏👏"
-}
-
+# القائمة الرئيسية
 @bot.message_handler(commands=['start'])
-def start_handler(message):
+def send_welcome(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    for s in sections.keys():
-        markup.add(types.KeyboardButton(s))
-    bot.send_message(message.chat.id, random.choice(start_replies), reply_markup=markup)
-    users[message.chat.id] = {"section": None, "index": 0, "score": 0, "questions": []}
+    for section in sections.keys():
+        markup.add(section)
+    bot.send_message(message.chat.id, "اختر نوع الأسئلة يلي بدك تجرب حظك فيها:", reply_markup=markup)
 
 @bot.message_handler(func=lambda msg: msg.text in sections.keys())
-def section_handler(message):
+def handle_section(message):
     section = message.text
-    users[message.chat.id]["section"] = section
-    users[message.chat.id]["index"] = 0
-    users[message.chat.id]["score"] = 0
-    users[message.chat.id]["questions"] = random.sample(sections[section], 10)
+    questions = sections[section]
+    sample_size = min(5, len(questions))  # نحط حد أقصى 5
+    quiz = random.sample(questions, sample_size)
+    user_state[message.chat.id] = {
+        "section": section,
+        "questions": quiz,
+        "score": 0,
+        "current": 0
+    }
     send_question(message.chat.id)
 
 def send_question(chat_id):
-    user = users[chat_id]
-    index = user["index"]
-    if index >= len(user["questions"]):
-        send_result(chat_id)
+    state = user_state.get(chat_id)
+    if state["current"] >= len(state["questions"]):
+        score = state["score"]
+        out_of = len(state["questions"])
+        rating = f"{score}/{out_of}"
+
+        if score == out_of:
+            comment = f"فخمممم! جبت العلامة الكاملة {rating} 👏😎"
+        elif score >= out_of * 0.7:
+            comment = f"نتيجتك منيحة: {rating}، بس شد حيلك شوي 😌"
+        elif score >= out_of * 0.4:
+            comment = f"جرب قسم تاني يمكن تكون فالح فيه 🌚 (نتيجتك: {rating})"
+        else:
+            comment = f"والله صعبة يا معلم، جبت {rating} 💔😂"
+
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        markup.add("رجوع للقائمة الرئيسية")
+        bot.send_message(chat_id, comment, reply_markup=markup)
+        user_state.pop(chat_id)
         return
-    q = user["questions"][index]
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    for a in q["a"]:
-        markup.add(types.KeyboardButton(a))
-    bot.send_message(chat_id, f"السؤال {index+1}: {q['q']}", reply_markup=markup)
+
+    question = state["questions"][state["current"]]
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
+    for option in question["options"]:
+        markup.add(option)
+    bot.send_message(chat_id, f"السؤال {state['current']+1}: {question['q']}", reply_markup=markup)
 
 @bot.message_handler(func=lambda msg: True)
-def answer_handler(message):
-    user = users.get(message.chat.id)
-    if not user or not user.get("section"):
+def handle_answer(message):
+    chat_id = message.chat.id
+    if message.text == "رجوع للقائمة الرئيسية":
+        send_welcome(message)
         return
 
-    index = user["index"]
-    if index >= len(user["questions"]):
+    if chat_id not in user_state:
+        bot.reply_to(message, "اكتب /start وبلّش من جديد 🌚")
         return
 
-    correct_answer = user["questions"][index]["c"]
-    if message.text == correct_answer:
-        user["score"] += 1
-        reply = random.choice(right_replies)
+    state = user_state[chat_id]
+    current_q = state["questions"][state["current"]]
+    if message.text == current_q["answer"]:
+        response = random.choice(responses_correct)
+        state["score"] += 1
     else:
-        reply = random.choice(wrong_replies)
+        response = random.choice(responses_wrong)
 
-    bot.send_message(message.chat.id, reply)
-    user["index"] += 1
-    send_question(message.chat.id)
+    bot.send_message(chat_id, response)
+    state["current"] += 1
+    send_question(chat_id)
 
-def send_result(chat_id):
-    user = users[chat_id]
-    score = user["score"]
-    text = f"خلصنا! نتيجتك: {score}/10\n"
-    comment = result_text.get(score, "يعني مش بطّال، بس في مجال تتحسّن 😅")
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    for s in sections.keys():
-        markup.add(types.KeyboardButton(s))
-    bot.send_message(chat_id, text + comment, reply_markup=markup)
-    users[chat_id] = {"section": None, "index": 0, "score": 0, "questions": []}
-
-print("البوت شغّال... استناه يجلط الناس بالأسئلة")
+print("البوت شغال... استناه يستقبل رسائل.")
 bot.polling()
