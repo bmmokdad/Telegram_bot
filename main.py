@@ -1,10 +1,12 @@
 import os
 import telebot
 import random
+from flask import Flask, request
 from telebot import types
 
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 bot = telebot.TeleBot(BOT_TOKEN)
+app = Flask(__name__)
 
 # الأسئلة لكل قسم
 sections = {
@@ -107,5 +109,18 @@ def handle_answer(message):
     state["current"] += 1
     send_question(chat_id)
 
-print("البوت شغال... استناه يستقبل رسائل.")
-bot.polling()
+# =============== Flask + Webhook ==============
+@app.route(f'/{BOT_TOKEN}', methods=['POST'])
+def webhook():
+    update = telebot.types.Update.de_json(request.stream.read().decode("utf-8"))
+    bot.process_new_updates([update])
+    return "ok", 200
+
+@app.route('/')
+def index():
+    return "البوت شغال عالويب هوك ✅"
+
+if __name__ == '__main__':
+    bot.remove_webhook()
+    bot.set_webhook(url=f"https://telegram-bot-v3sv.onrender.com/{BOT_TOKEN}")
+    app.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
