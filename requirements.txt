@@ -1,1 +1,3 @@
-pyTelegramBotAPI
+git add requirements.txt
+git commit -m "Add flask and pyTelegramBotAPI to requirements"
+git push
