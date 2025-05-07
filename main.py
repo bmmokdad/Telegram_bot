@@ -3,7 +3,7 @@ import random
 import json
 from flask import Flask, request
 
-TOKEN = 'YOUR_BOT_TOKEN'
+TOKEN = '7646007283:AAGUiDAXOiHDW08gDuOTZHYLEciCwjlSnlA'
 bot = telebot.TeleBot(TOKEN)
 app = Flask(__name__)
 
