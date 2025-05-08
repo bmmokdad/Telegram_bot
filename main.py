@@ -1,71 +1,100 @@
 import telebot
-import json
 import random
+import json
+import os
 from flask import Flask, request
 
-API_TOKEN = '7646007283:AAGUiDAXOiHDW08gDuOTZHYLEciCwjlSnlA'
-bot = telebot.TeleBot(API_TOKEN)
+TOKEN = '7646007283:AAGUiDAXOiHDW08gDuOTZHYLEciCwjlSnlA'
+bot = telebot.TeleBot(TOKEN)
 app = Flask(__name__)
 
-# خريطة الأزرار مع أسماء الملفات
-question_files = {
-    'أسئلة عامة': 'general_questions.json',
-    'جغرافيا': 'geo_questions.json'
-}
+# الحصول على المسار الكامل للمجلد الذي يحتوي على السكربت
+base_dir = os.path.dirname(os.path.abspath(__file__))  # المسار الكامل للملف الحالي
 
-# دالة تحميل الأسئلة من ملف
+# تحميل الأسئلة من الملفات باستخدام المسار الكامل
 def load_questions(filename):
-    try:
-        with open(filename, 'r', encoding='utf-8') as f:
-            return json.load(f)
-    except Exception as e:
-        print(f"Error loading {filename}: {e}")
-        return []
+    file_path = os.path.join(base_dir, filename)  # دمج المسار الكامل مع اسم الملف
+    with open(file_path, 'r', encoding='utf-8') as file:
+        return json.load(file)
 
-# بداية المحادثة
+# تحميل جميع الأسئلة من الملفات
+geo_questions = load_questions('geo_questions.json')
+history_questions = load_questions('history_questions.json')
+riddles_questions = load_questions('riddles_questions.json')
+general_questions = load_questions('general_questions.json')
+islamic_questions = load_questions('islamic_questions.json')
+
+# دالة للحصول على 10 أسئلة عشوائية من قسم معيّن
+def get_random_questions(section):
+    return random.sample(all_questions[section], 10)
+
+# تخزين حالة المستخدم
+user_state = {}
+
+# الرد على /start
 @bot.message_handler(commands=['start'])
-def start_message(message):
+def send_welcome(message):
     markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
-    for name in question_files:
-        markup.row(name)
-    bot.send_message(message.chat.id, "اختار نوع الأسئلة:", reply_markup=markup)
+    markup.row("أسئلة دينية", "أسئلة عامة")
+    markup.row("أسئلة جغرافيا", "أسئلة تاريخ")
+    markup.row("ألغاز")
+    bot.send_message(message.chat.id, "أهلين فيك! اختر نوع الأسئلة يلي بدك ياها:", reply_markup=markup)
 
-# استقبال اختيار المستخدم
-@bot.message_handler(func=lambda message: message.text in question_files)
-def handle_question_category(message):
-    filename = question_files[message.text]
-    questions = load_questions(filename)
-    
-    if not questions:
-        bot.send_message(message.chat.id, "صار في مشكلة بتحميل الأسئلة.")
-        return
+# استقبال النوع المختار
+@bot.message_handler(func=lambda message: message.text in all_questions.keys())
+def handle_question_type(message):
+    q_type = message.text
+    user_state[message.chat.id] = {
+        'type': q_type,
+        'questions': get_random_questions(q_type),
+        'index': 0,
+        'score': 0
+    }
+    send_question(message.chat.id)
 
-    # نختار سؤال عشوائي
-    question = random.choice(questions)
-    bot.send_message(message.chat.id, f"السؤال:\n{question['question']}")
-    
-    # ننتظر الجواب
-    bot.register_next_step_handler(message, lambda msg: check_answer(msg, question['answer']))
-
-# دالة التحقق من الجواب
-def check_answer(message, correct_answer):
-    if message.text.strip().lower() == correct_answer.strip().lower():
-        bot.send_message(message.chat.id, "صح عليك! 😎")
+def send_question(chat_id):
+    state = user_state.get(chat_id)
+    if state and state['index'] < len(state['questions']):
+        q_data = state['questions'][state['index']]
+        markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+        for option in q_data['options']:
+            markup.add(option)
+        bot.send_message(chat_id, f"السؤال {state['index'] + 1}:\n{q_data['question']}", reply_markup=markup)
     else:
-        bot.send_message(message.chat.id, f"لأ غلط! الجواب الصحيح هو: {correct_answer}")
+        finish_quiz(chat_id)
 
-# إعداد الويب هوك لـ Render
-@app.route('/', methods=['GET', 'POST'])
+@bot.message_handler(func=lambda message: message.chat.id in user_state)
+def handle_answer(message):
+    state = user_state[message.chat.id]
+    q_data = state['questions'][state['index']]
+    if message.text == q_data['answer']:
+        state['score'] += 1
+        bot.reply_to(message, random.choice(["صح عليك!", "جبتها!", "إجابة صحيحة!", "مبدع والله"]))
+    else:
+        bot.reply_to(message, f"غلط! الجواب الصحيح: {q_data['answer']}")
+    state['index'] += 1
+    send_question(message.chat.id)
+
+def finish_quiz(chat_id):
+    state = user_state.get(chat_id)
+    score = state['score']
+    if score == 10:
+        msg = "مكسر الدنيا! 10/10!"
+    elif score >= 7:
+        msg = f"نتيجتك {score}/10، ممتاز!"
+    elif score >= 4:
+        msg = f"{score}/10، حاول مرّة تانية!"
+    else:
+        msg = f"{score}/10، فكر أكتر شوي المرة الجاي!"
+    bot.send_message(chat_id, msg, reply_markup=telebot.types.ReplyKeyboardRemove())
+    del user_state[chat_id]
+
+# Flask Webhook
+@app.route(f"/{TOKEN}", methods=['POST'])
 def webhook():
-    if request.method == 'POST':
-        bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
-        return 'ok', 200
-    else:
-        return 'Hello from Telegram bot', 200
+    bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
+    return "OK", 200
 
-# تعيين الويب هوك
-bot.remove_webhook()
-bot.set_webhook(url='https://telegram-bot-v3sv.onrender.com/')
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=10000)
+@app.route("/", methods=['GET'])
+def index():
+    return "البوت شغّال تمام", 200
