@@ -88,7 +88,7 @@ def finish_quiz(chat_id):
     elif score >= 4:
         msg = f"{score}/10، حاول مرّة تانية!"
     else:
-        msg = f"{score}/10، فكر أكتر شوي المرة الجاي!"
+        msg = f"{score}/10، فكر أكتر شوي المرة الجاية!"
     bot.send_message(chat_id, msg, reply_markup=telebot.types.ReplyKeyboardRemove())
     del user_state[chat_id]
 
