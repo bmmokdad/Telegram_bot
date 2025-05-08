@@ -7,9 +7,25 @@ TOKEN = '7646007283:AAGUiDAXOiHDW08gDuOTZHYLEciCwjlSnlA'
 bot = telebot.TeleBot(TOKEN)
 app = Flask(__name__)
 
-# تحميل الأسئلة من الملف
-with open('questions_data.json', 'r', encoding='utf-8') as file:
-    all_questions = json.load(file)
+# تحميل الأسئلة من الملفات
+def load_questions():
+    questions = {}
+    file_names = {
+        "أسئلة دينية": "islamic_questions.json",
+        "أسئلة عامة": "general_questions.json",
+        "أسئلة جغرافيا": "geo_questions.json",
+        "أسئلة تاريخ": "history_questions.json",
+        "ألغاز": "riddles_questions.json"
+    }
+    
+    for section, file_name in file_names.items():
+        with open(file_name, 'r', encoding='utf-8') as file:
+            questions[section] = json.load(file)
+    
+    return questions
+
+# تحميل الأسئلة في البداية
+all_questions = load_questions()
 
 # دالة للحصول على 10 أسئلة عشوائية من قسم معيّن
 def get_random_questions(section):
